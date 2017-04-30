@@ -13,7 +13,7 @@
         this.options = options;
         this.$select = $(select);
         this.$input = $('<input type="text" autocomplete="off">');
-        this.$list = $('<ul class="es-list" id="editable_select_list">');
+        this.$list = $('<ul class="es-list">');
         this.utility = new EditableSelectUtility(this);
 
         if (['focus', 'manual'].indexOf(this.options.trigger) < 0) this.options.trigger = 'focus';
@@ -34,10 +34,6 @@
     EditableSelect.prototype.filter = function () {
         var hiddens = 0;
         var search = this.$input.val().toLowerCase().trim();
-        // console.log("search: " + search);
-        // console.log("type: " + typeof this.$input + " this.$input: " + this.$input);
-        // console.log("type: " + typeof this.$input.val() + " this.$input.val(): " + this.$input.val());
-
         this.$list.find('li').addClass('es-visible').show();
         if (this.options.filter) {
             hiddens = this.$list.find('li').filter(function (i, li) {
@@ -77,6 +73,9 @@
         this.filter();
         this.utility.trigger('select', $li);
     };
+    EditableSelect.prototype.changed = function ($in) {
+        this.utility.trigger('changed', $in);
+    };
     EditableSelect.prototype.add = function (text, index, attrs, data) {
         var $li = $('<li>').html(text);
         var $option = $('<option>').text(text);
@@ -102,6 +101,11 @@
         else index = Math.min(Math.max(0, index), last - 1);
         this.$list.find('li').eq(index).remove();
         this.$select.find('option').eq(index).remove();
+        this.filter();
+    };
+    EditableSelect.prototype.clear = function () {
+        this.$list.find('li').remove();
+        this.$select.find('option').remove();
         this.filter();
     };
     EditableSelect.prototype.destroy = function () {
@@ -185,6 +189,9 @@
                     that.highlight(0);
                     break;
             }
+        });
+        that.es.$input.on('input', function () {
+            that.es.changed(that.es.$input);
         });
     };
     EditableSelectUtility.prototype.highlight = function (index) {

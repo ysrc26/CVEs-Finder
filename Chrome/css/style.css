@@ -1,0 +1,26 @@
+body {
+  min-width: 500px;
+}
+
+#quote {
+  font-size: 18px;
+  font-weight: bold;
+  color: #b83026;
+}
+
+#author {
+  margin-top: 15px;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: bold;
+}
+
+#generate {
+  display: block;
+  margin: 15px auto;
+  background: #16B6DF;
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 10px;
+}
