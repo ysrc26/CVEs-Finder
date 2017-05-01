@@ -1,9 +1,7 @@
-var URL_VERSIONS = "https://nvd.nist.gov/NVD/Services/CpeSearchServices.ashx?serviceType=versions";
-var URL_VERSION_BY_PARAM = "https://nvd.nist.gov/NVD/Services/CpeSearchServices.ashx?serviceType=versionList";
-var URL_VENDOR = "https://nvd.nist.gov/NVD/Services/CpeSearchServices.ashx?serviceType=vendors";
-var URL_CVES = "https://nvd.nist.gov/vuln/search/results?adv_search=true&form_type=advanced&results_type=overview";
+var BASE_URL = "https://nvd.nist.gov/NVD/Services/CpeSearchServices.ashx";
+var URL_CVES = "https://nvd.nist.gov/vuln/search/results";
 
-function getCVEs(callback, vendor, product, cpeversion) {
+function getCVEs(vendor, product, cpeversion) {
     $.get(URL_CVES, {
         cpe_vendor: vendor,
         cpe_product: product,
@@ -13,16 +11,28 @@ function getCVEs(callback, vendor, product, cpeversion) {
             var resultsobj = document.createElement('div');
             resultsobj.innerHTML = data;
             var CVEsList = resultsobj.getElementsByTagName('table')[0];
-            document.getElementById('results').appendChild(CVEsList);
+            if (CVEsList) {
+                document.getElementById('results').appendChild(CVEsList);
+            }
+            else {
+                document.getElementById('results').innerText = "error to get CVEs";
+                // // console.log($('resultsobj')("div:contains(There are \\0 matching records)"));
+                // // var $i = $(data);
+                // // console.log($(data)("div:contains(There are \\0 matching records)"));
+                // var $jQueryObject = $($.parseHTML(data));
+                // console.log(typeof $jQueryObject);
+                // // console.log($jQueryObject.find("#frameBusterDiv").html());
+                // console.log($($jQueryObject)("div:contains(There are \\0 matching records)"));
+            }
         }
         else {
-            document.getElementById('results').innerText = "error";
+            document.getElementById('results').innerText = "error to get CVEs";
         }
     });
 }
 
 function getVendorsList(product) {
-    $.get(URL_VENDOR, {product: product}, function (data) {
+    $.get(BASE_URL, {serviceType: "vendors", product: product}, function (data) {
         var vendorsListElement = document.getElementById("vendorsList");
 
         // Clear previous results
@@ -39,11 +49,11 @@ function getVendorsList(product) {
     });
 }
 
-function getVersionsList(product, vendor, callback) {
+function getVersionsList(product, vendor) {
     //Clear last results
     $('#versionsList').editableSelect('clear');
 
-    $.get(URL_VERSIONS, {product: product, vendor: vendor}, function (data) {
+    $.get(BASE_URL, {serviceType: "versions", product: product, vendor: vendor}, function (data) {
 
         var versions = data.split("|");
         versions.forEach(function (entry) {
@@ -60,10 +70,11 @@ function updateVersionsList(product, vendor, versionStartsWith) {
     //Clear last results
     $('#versionsList').editableSelect('clear');
 
-    $.get(URL_VERSION_BY_PARAM, {
+    $.get(BASE_URL, {
+        serviceType: "versionList",
         product: product,
         vendor: vendor,
-        versionStartsWith: versionStartsWith
+        startsWith: versionStartsWith
     }, function (data) {
         var versions = data.split("|");
         versions.forEach(function (entry) {
@@ -74,6 +85,7 @@ function updateVersionsList(product, vendor, versionStartsWith) {
                 {0: {"name": "value", "value": entry}});
         });
     });
+    $('#versionsList').editableSelect('show');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -91,22 +103,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add listener for vendor to get versions list
     vendorsList.addEventListener("input", function () {
         let vendor = vendorsList.options[vendorsList.selectedIndex].value;
-        getVersionsList(product.value, vendor, updateVersionsList);
+        getVersionsList(product.value, vendor);
     });
 
     // // Add listener for versions list to update versions lists when user changed the version text field
     $('#versionsList').editableSelect().on('changed.editable-select', function (e, input) {
-        updateVersionsList(product.value,
-            vendorsList.options[vendorsList.selectedIndex].value,
-            input[0].value);
+        if (input[0].value === "") {
+            getVersionsList(product.value, vendorsList.options[vendorsList.selectedIndex].value);
+        }
+        else {
+            updateVersionsList(product.value,
+                vendorsList.options[vendorsList.selectedIndex].value,
+                input[0].value);
+        }
     });
 
     button.addEventListener('click', function () {
         //Clear previous results
         document.getElementById('results').innerHTML = "";
 
-        getCVEs("",
-            vendorsList.options[vendorsList.selectedIndex].value,
+        getCVEs(vendorsList.options[vendorsList.selectedIndex].value,
             product.value,
             versionsList.options[versionsList.selectedIndex].value);
     });
