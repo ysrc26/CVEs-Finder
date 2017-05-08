@@ -13,16 +13,14 @@ function getCVEs(vendor, product, cpeversion) {
             var CVEsList = resultsobj.getElementsByTagName('table')[0];
             if (CVEsList) {
                 document.getElementById('results').appendChild(CVEsList);
+                $('#results a').each(function () {
+                    let $this = $(this),
+                        href = $this.attr('href');
+                    $this.attr('href', "https://nvd.nist.gov" + href);
+                })
             }
             else {
                 document.getElementById('results').innerText = "error to get CVEs";
-                // // console.log($('resultsobj')("div:contains(There are \\0 matching records)"));
-                // // var $i = $(data);
-                // // console.log($(data)("div:contains(There are \\0 matching records)"));
-                // var $jQueryObject = $($.parseHTML(data));
-                // console.log(typeof $jQueryObject);
-                // // console.log($jQueryObject.find("#frameBusterDiv").html());
-                // console.log($($jQueryObject)("div:contains(There are \\0 matching records)"));
             }
         }
         else {
@@ -84,8 +82,8 @@ function updateVersionsList(product, vendor, versionStartsWith) {
                 0,
                 {0: {"name": "value", "value": entry}});
         });
+        $('#versionsList').editableSelect('show');
     });
-    $('#versionsList').editableSelect('show');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
