@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "CVE Finder",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Find CVEs easily by product name, vendor, and the specific version",
   "browser_action": {
     "default_icon": "images/icon128.png",
