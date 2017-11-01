@@ -3,9 +3,9 @@ var URL_CVES = "https://nvd.nist.gov/vuln/search/results";
 
 function getCVEs(vendor, product, cpeversion) {
     $.get(URL_CVES, {
-        cpe_vendor: vendor,
-        cpe_product: product,
-        cpe_version: cpeversion
+        cpe_vendor: "cpe:/:" + vendor,
+        cpe_product: "cpe:/:" + product,
+        cpe_version: "cpe:/:" + vendor + ":" + product + ":" + cpeversion
     }, function (data, status) {
         if (status === 'success') {
             var resultsobj = document.createElement('div');
@@ -29,99 +29,115 @@ function getCVEs(vendor, product, cpeversion) {
     });
 }
 
-function getVendorsList(product) {
-    $.get(BASE_URL, {serviceType: "vendors", product: product}, function (data) {
-        var vendorsListElement = document.getElementById("vendorsList");
+function getProductList(productName) {
 
-        // Clear previous results
-        vendorsListElement.options.length = 0;
+    fetch(BASE_URL + "?serviceType=productList&startsWith=" + productName)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (productList) {
+            //Clear last results
+            $('#productsList').editableSelect('clear');
 
-        // Add vendors to vendors list
-        var vendors = data.split("|");
-        vendors.forEach(function (entry) {
-            if (!entry.includes("cpe")) {
-                vendorsListElement.options[vendorsListElement.options.length] = new Option(entry, entry);
+            if (productList.hasOwnProperty('components')) {
+                productList.components.forEach(function (key) {
+                    $('#productsList').editableSelect('add', key.componentName);
+                });
             }
+            else {
+                console.log('Error: No products were found.');
+            }
+        })
+        .catch(function (error) {
+            console.log('Request failed', error);
         });
-        getVersionsList(product, vendorsListElement.options[vendorsListElement.selectedIndex].value)
-    });
+}
+
+function getVendorsList(productName) {
+    fetch(BASE_URL + "?serviceType=vendors&product=" + productName)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (vendorsList) {
+
+            //Clear last results
+            $('#vendorsList').editableSelect('clear');
+
+            if (vendorsList.hasOwnProperty('components')) {
+                vendorsList.components.forEach(function (key) {
+                    $('#vendorsList').editableSelect('add', key.componentName);
+                });
+            }
+            else {
+                console.log('Error: No vendors were found.');
+            }
+        })
+        .catch(function (error) {
+            console.log('Request failed', error);
+        });
 }
 
 function getVersionsList(product, vendor) {
-    //Clear last results
-    $('#versionsList').editableSelect('clear');
 
-    $.get(BASE_URL, {serviceType: "versions", product: product, vendor: vendor}, function (data) {
+    fetch(BASE_URL + "?serviceType=versions&product=" + product + "&vendor=" + vendor)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (versionsList) {
+            //Clear last results
+            $('#versionsList').editableSelect('clear');
 
-        var versions = data.split("|");
-        versions.forEach(function (entry) {
-            let versionNumber = entry.split(":");
-            $('#versionsList').editableSelect('add',
-                versionNumber[versionNumber.length - 1],
-                0,
-                {0: {"name": "value", "value": entry}});
+            if (versionsList.hasOwnProperty('components')) {
+                versionsList.components.forEach(function (key) {
+                    var versionNumber = key.cpeUri.split(":");
+                    $('#versionsList').editableSelect('add', versionNumber[versionNumber.length - 1]);
+                });
+            }
+            else {
+                console.log('Error: No vendors were found.');
+            }
+        })
+        .then(function () {
+            $('#versionsList').on('select.editable-select', function () {
+                document.getElementById("getVulnList").disabled = false;
+            });
+        })
+        .catch(function (error) {
+            console.log('Request failed', error);
         });
-    });
-}
-
-function updateVersionsList(product, vendor, versionStartsWith) {
-    //Clear last results
-    $('#versionsList').editableSelect('clear');
-
-    $.get(BASE_URL, {
-        serviceType: "versionList",
-        product: product,
-        vendor: vendor,
-        startsWith: versionStartsWith
-    }, function (data) {
-        var versions = data.split("|");
-        versions.forEach(function (entry) {
-            let versionNumber = entry.split(":");
-            $('#versionsList').editableSelect('add',
-                versionNumber[versionNumber.length - 1],
-                0,
-                {0: {"name": "value", "value": entry}});
-        });
-        $('#versionsList').editableSelect('show');
-    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     // Start Here
-    var button = document.getElementById('getVulnList');
-    var product = document.getElementById('productText');
-    var vendorsList = document.getElementById('vendorsList');
-    var versionsList = document.getElementById('versionsList');
+    var getVulnListButton = document.getElementById('getVulnList');
+    var product, vendor, version;
+    var productElement = $('#productsList').editableSelect();
+    var vendorElement = $('#vendorsList').editableSelect();
+    var versionElement = $('#versionsList').editableSelect();
 
-    // Add listener for product to get vendors list
-    product.addEventListener("input", function () {
-        getVendorsList(product.value);
+    productElement.on('changed.editable-select', function (e, input) {
+        getProductList(input[0].value);
     });
 
-    // Add listener for vendor to get versions list
-    vendorsList.addEventListener("input", function () {
-        let vendor = vendorsList.options[vendorsList.selectedIndex].value;
-        getVersionsList(product.value, vendor);
+    //region on Select event
+    productElement.on('select.editable-select', function (e, li) {
+        product = li.text();
+        getVendorsList(product);
     });
 
-    // // Add listener for versions list to update versions lists when user changed the version text field
-    $('#versionsList').editableSelect().on('changed.editable-select', function (e, input) {
-        if (input[0].value === "") {
-            getVersionsList(product.value, vendorsList.options[vendorsList.selectedIndex].value);
-        }
-        else {
-            updateVersionsList(product.value,
-                vendorsList.options[vendorsList.selectedIndex].value,
-                input[0].value);
-        }
+    vendorElement.on('select.editable-select', function (e, li) {
+        vendor = li.text();
+        getVersionsList(product, vendor);
     });
 
-    button.addEventListener('click', function () {
+    versionElement.on('select.editable-select', function (e, li) {
+        version = li.text();
+    });
+    //endregion
+
+    getVulnListButton.addEventListener('click', function () {
         //Clear previous results
         document.getElementById('results').innerHTML = "";
-
-        getCVEs(vendorsList.options[vendorsList.selectedIndex].value,
-            product.value,
-            versionsList.options[versionsList.selectedIndex].value);
+        getCVEs(vendor, product, version);
     });
 });

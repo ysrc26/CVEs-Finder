@@ -180,6 +180,9 @@
                         e.preventDefault();
                     }
                     break;
+                case 0: // Mouse Left Click
+                    that.es.show();
+                    break;
                 case 9:  // Tab
                 case 27: // Esc
                     that.es.hide();

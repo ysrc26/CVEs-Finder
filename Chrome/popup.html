@@ -16,9 +16,8 @@
 <div class="container">
     <h3>CVEs Finder</h3>
     <div class="form-group col-xs-6">
-        <label for="productText" class="control-label">Product: </label>
-        <input type="text" required="required" class="form-control " name="product"
-               id="productText" placeholder="Product Name...">
+        <label for="productsList" class="control-label">Product: </label>
+        <select id="productsList" class="form-control"></select>
     </div>
     <div class="form-group col-xs-6">
         <label for="vendorsList" class="control-label">Vendor: </label>
@@ -30,7 +29,7 @@
     </div>
     <div class="form-group">
         <div class="col-xs-9 col-xs-offset-0">
-            <button id="getVulnList" class="btn btn-lg btn-danger col-xs-5">Get CVEs</button>
+            <button id="getVulnList" disabled class="btn btn-lg btn-danger col-xs-5">Get CVEs</button>
         </div>
     </div>
 </div>
