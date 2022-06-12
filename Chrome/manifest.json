@@ -3,7 +3,7 @@
   "name": "CVE Finder",
   "version": "1.6",
   "description": "Find CVEs easily by product name, vendor, and the specific version",
-  "browser_action": {
+  "action": {
     "default_icon": "images/icon128.png",
     "default_popup": "popup.html"
   },
@@ -12,7 +12,7 @@
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   },
-  "permissions": [
+  "host_permissions": [
     "https://nvd.nist.gov/*"
   ]
 }
