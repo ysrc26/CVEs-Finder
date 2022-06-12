@@ -1,5 +1,5 @@
-var BASE_URL = "https://nvd.nist.gov/NVD/Services/CpeSearchServices.ashx";
-var URL_CVES = "https://nvd.nist.gov/vuln/search/results";
+var BASE_URL = "https://nvd.nist.gov/rest/public/cpe/";
+var URL_CVES = "https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false";
 
 function getCVEs(vendor, product, cpeversion) {
     $.get(URL_CVES, {
@@ -31,7 +31,7 @@ function getCVEs(vendor, product, cpeversion) {
 
 function getProductList(productName) {
 
-    fetch(BASE_URL + "?serviceType=productList&startsWith=" + productName)
+    fetch(BASE_URL + "products?serviceType=productList&startsWith=" + productName)
         .then(function (response) {
             return response.json();
         })
@@ -53,8 +53,8 @@ function getProductList(productName) {
         });
 }
 
-function getVendorsList(productName) {
-    fetch(BASE_URL + "?serviceType=vendors&product=" + productName)
+function getVendorsList(vendorName) {
+    fetch(BASE_URL + "vendors?serviceType=vendorList&startsWith=" + vendorName)
         .then(function (response) {
             return response.json();
         })
@@ -79,7 +79,7 @@ function getVendorsList(productName) {
 
 function getVersionsList(product, vendor) {
 
-    fetch(BASE_URL + "?serviceType=versions&product=" + product + "&vendor=" + vendor)
+    fetch(BASE_URL + "versions?serviceType=versions&product=" + product + "&vendor=" + vendor)
         .then(function (response) {
             return response.json();
         })
@@ -89,12 +89,12 @@ function getVersionsList(product, vendor) {
 
             if (versionsList.hasOwnProperty('components')) {
                 versionsList.components.forEach(function (key) {
-                    var versionNumber = key.cpeUri.split(":");
-                    $('#versionsList').editableSelect('add', versionNumber[versionNumber.length - 1]);
+                    let versionElement = key.cpeUri.split(":");
+                    $('#versionsList').editableSelect('add', versionElement[versionElement.length - 1]);
                 });
             }
             else {
-                console.log('Error: No vendors were found.');
+                console.log('Error: No vulnerable versions were found.');
             }
         })
         .then(function () {
