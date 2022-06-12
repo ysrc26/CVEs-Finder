@@ -1,10 +1,10 @@
 var BASE_URL = "https://nvd.nist.gov/rest/public/cpe/";
-var URL_CVES = "https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=false";
+var URL_CVES = "https://nvd.nist.gov/vuln/search/results?form_type=Advanced&results_type=overview&search_type=all&isCpeNameSearch=true";
 
 function getCVEs(vendor, product, cpeversion) {
     $.get(URL_CVES, {
         cpe_vendor: "cpe:/:" + vendor,
-        cpe_product: "cpe:/:" + product,
+        cpe_product: "cpe:/::" + product,
         cpe_version: "cpe:/:" + vendor + ":" + product + ":" + cpeversion
     }, function (data, status) {
         if (status === 'success') {
@@ -53,8 +53,8 @@ function getProductList(productName) {
         });
 }
 
-function getVendorsList(vendorName) {
-    fetch(BASE_URL + "vendors?serviceType=vendorList&startsWith=" + vendorName)
+function getVendorsList(productName) {
+    fetch(BASE_URL + "vendors?serviceType=vendors&product=" + productName)
         .then(function (response) {
             return response.json();
         })
